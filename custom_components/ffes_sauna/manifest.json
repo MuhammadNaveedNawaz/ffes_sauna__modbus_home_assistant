@@ -1,13 +1,17 @@
 {
   "domain": "ffes_sauna",
   "name": "FFES Sauna Modbus",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "documentation": "https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant",
   "issue_tracker": "https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/issues",
-  "codeowners": ["@LeszekWroblowski"],
+  "codeowners": [
+    "@LeszekWroblowski"
+  ],
   "config_flow": true,
   "dependencies": [],
-  "requirements": ["pymodbus>=3.6.0"],
+  "requirements": [
+    "pymodbus>=3.6.0"
+  ],
   "iot_class": "local_polling",
   "integration_type": "device",
   "after_dependencies": []

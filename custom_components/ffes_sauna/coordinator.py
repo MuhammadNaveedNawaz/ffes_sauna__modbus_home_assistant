@@ -115,7 +115,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             result = self._client.read_holding_registers(
                 address=0,
                 count=50,
-                slave=self.slave,
+                unit=self.slave,
             )
             
             if result.isError():
@@ -168,7 +168,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             coil_result = self._client.read_coils(
                 address=0,
                 count=56,
-                slave=self.slave,
+                unit=self.slave,
             )
             
             if not coil_result.isError():
@@ -213,7 +213,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         result = self._client.write_register(
             address=address,
             value=value,
-            slave=self.slave,
+            unit=self.slave,
         )
         
         if result.isError():
@@ -239,7 +239,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         result = self._client.write_coil(
             address=address,
             value=value,
-            slave=self.slave,
+            unit=self.slave,
         )
         
         if result.isError():
@@ -252,3 +252,5 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self._client:
             await self.hass.async_add_executor_job(self._client.close)
             _LOGGER.info("Closed Modbus connection")
+
+
