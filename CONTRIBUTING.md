@@ -40,7 +40,7 @@ Feature suggestions are welcome! Please open an issue describing:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/YOUR_USERNAME/ffes-sauna-modbus.git
+git clone https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant.git
 cd ffes-sauna-modbus
 ```
 

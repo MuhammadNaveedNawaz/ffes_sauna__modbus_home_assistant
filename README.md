@@ -1,7 +1,7 @@
 # FFES Sauna Home Assistant Integration
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-[![GitHub release](https://img.shields.io/github/release/YOUR_USERNAME/ffes-sauna-modbus.svg)](https://github.com/YOUR_USERNAME/ffes-sauna-modbus/releases)
+[![GitHub release](https://img.shields.io/github/release/LeszekWroblowski/ffes_sauna__modbus_home_assistant.svg)](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/releases)
 
 Home Assistant integration for FFES Sauna controllers with Modbus TCP support.
 
@@ -35,7 +35,7 @@ This integration works with FFES sauna controllers that support Modbus TCP proto
 2. Click on "Integrations"
 3. Click the three dots in the top right corner
 4. Select "Custom repositories"
-5. Add this repository URL: `https://github.com/YOUR_USERNAME/ffes-sauna-modbus`
+5. Add this repository URL: `https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant`
 6. Select category: "Integration"
 7. Click "Add"
 8. Find "FFES Sauna" in HACS and click "Download"
@@ -326,9 +326,9 @@ logger:
 
 ## Support
 
-- 🐛 [Report a Bug](https://github.com/YOUR_USERNAME/ffes-sauna-modbus/issues)
-- 💡 [Request a Feature](https://github.com/YOUR_USERNAME/ffes-sauna-modbus/issues)
-- 📖 [Documentation](https://github.com/YOUR_USERNAME/ffes-sauna-modbus/wiki)
+- 🐛 [Report a Bug](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/issues)
+- 💡 [Request a Feature](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/issues)
+- 📖 [Documentation](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/wiki)
 
 ## Contributing
 

@@ -44,7 +44,7 @@ git add .
 git commit -m "Initial release v1.0.0"
 
 # Add GitHub remote (replace YOUR_USERNAME)
-git remote add origin https://github.com/YOUR_USERNAME/ffes-sauna-modbus.git
+git remote add origin https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant.git
 
 # Push to GitHub
 git branch -M main
@@ -102,7 +102,7 @@ git push -u origin main
    ## Installation
    
    Via HACS:
-   1. Add custom repository: `https://github.com/YOUR_USERNAME/ffes-sauna-modbus`
+   1. Add custom repository: `https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant`
    2. Install "FFES Sauna"
    3. Restart Home Assistant
    4. Add integration via UI
@@ -134,7 +134,7 @@ Update these files with your GitHub username:
 ### 1. README.md
 Replace all instances of `YOUR_USERNAME` with your actual GitHub username:
 ```markdown
-https://github.com/YOUR_USERNAME/ffes-sauna-modbus
+https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant
 ```
 
 ### 2. hacs.json
@@ -144,9 +144,9 @@ No changes needed - HACS will find the repository automatically.
 Update the URLs:
 ```json
 {
-  "documentation": "https://github.com/YOUR_USERNAME/ffes-sauna-modbus",
-  "issue_tracker": "https://github.com/YOUR_USERNAME/ffes-sauna-modbus/issues",
-  "codeowners": ["@YOUR_USERNAME"]
+  "documentation": "https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant",
+  "issue_tracker": "https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/issues",
+  "codeowners": ["@LeszekWroblowski"]
 }
 ```
 
@@ -191,7 +191,7 @@ Users can add your integration to HACS:
 1. Open HACS in Home Assistant
 2. Go to Integrations
 3. Click ⋮ menu → Custom repositories
-4. Add: `https://github.com/YOUR_USERNAME/ffes-sauna-modbus`
+4. Add: `https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant`
 5. Category: Integration
 6. Install and enjoy!
 

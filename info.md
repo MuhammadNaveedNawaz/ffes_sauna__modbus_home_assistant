@@ -27,4 +27,4 @@ Control your FFES sauna controller directly from Home Assistant using Modbus TCP
 - Controller connected to your local network
 - Firmware version 1.21/6.21 or newer
 
-For full documentation, automation examples, and troubleshooting, see the [GitHub repository](https://github.com/YOUR_USERNAME/ffes-sauna-modbus).
+For full documentation, automation examples, and troubleshooting, see the [GitHub repository](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant).

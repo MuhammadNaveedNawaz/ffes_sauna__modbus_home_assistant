@@ -6,7 +6,7 @@
 2. Click "Integrations"
 3. Click the ⋮ menu (three dots) in top right
 4. Select "Custom repositories"
-5. Add repository URL: `https://github.com/YOUR_USERNAME/ffes-sauna-modbus`
+5. Add repository URL: `https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant`
 6. Category: "Integration"
 7. Click "Add"
 8. Find "FFES Sauna" and click "Download"
@@ -154,8 +154,8 @@ data:
 
 ## 10. Support
 
-- 🐛 [Report bugs](https://github.com/YOUR_USERNAME/ffes-sauna-modbus/issues)
-- 💬 [Ask questions](https://github.com/YOUR_USERNAME/ffes-sauna-modbus/discussions)
+- 🐛 [Report bugs](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/issues)
+- 💬 [Ask questions](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/discussions)
 - ⭐ Star the project if you like it!
 
 ---

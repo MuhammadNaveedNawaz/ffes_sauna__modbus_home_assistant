@@ -25,7 +25,7 @@ Choose one of the following installation methods:
 2. **Add Custom Repository**
    - Click the ⋮ menu (three dots) in the top right corner
    - Select "Custom repositories"
-   - Add this repository URL: `https://github.com/YOUR_USERNAME/ffes-sauna-modbus`
+   - Add this repository URL: `https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant`
    - Category: Select "Integration"
    - Click "Add"
 
@@ -265,8 +265,8 @@ Go through this checklist:
 
 Need help?
 
-- 🐛 [Report bugs](https://github.com/YOUR_USERNAME/ffes-sauna-modbus/issues)
-- 💬 [Ask questions](https://github.com/YOUR_USERNAME/ffes-sauna-modbus/discussions)
+- 🐛 [Report bugs](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/issues)
+- 💬 [Ask questions](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/discussions)
 - 📧 Check controller manual for Modbus settings
 
 ## Version Check
