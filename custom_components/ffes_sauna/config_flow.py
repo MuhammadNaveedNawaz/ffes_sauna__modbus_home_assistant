@@ -4,14 +4,12 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pymodbus.client import ModbusTcpClient
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
 
 from .const import (
     CONF_SLAVE,
@@ -23,41 +21,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-
-async def validate_connection(
-    hass: HomeAssistant, host: str, port: int, slave: int
-) -> dict[str, str]:
-    """Validate the Modbus connection."""
-    errors = {}
-    
-    try:
-        client = ModbusTcpClient(host=host, port=port, timeout=5)
-        
-        # Try to connect
-        connected = await hass.async_add_executor_job(client.connect)
-        
-        if not connected:
-            errors["base"] = "cannot_connect"
-            return errors
-        
-        # Try to read a register to verify communication
-        result = await hass.async_add_executor_job(
-            client.read_holding_registers, 0, 1, slave
-        )
-        
-        await hass.async_add_executor_job(client.close)
-        
-        if result.isError():
-            errors["base"] = "invalid_slave"
-        else:
-            _LOGGER.info("Successfully validated connection to %s:%s", host, port)
-            
-    except Exception as err:
-        _LOGGER.error("Error validating connection: %s", err)
-        errors["base"] = "cannot_connect"
-    
-    return errors
 
 
 class FFESSaunaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -72,31 +35,24 @@ class FFESSaunaConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate connection
-            errors = await validate_connection(
-                self.hass,
-                user_input[CONF_HOST],
-                user_input[CONF_PORT],
-                user_input[CONF_SLAVE],
+            # Check if already configured
+            await self.async_set_unique_id(
+                f"{user_input[CONF_HOST]}_{user_input[CONF_PORT]}_{user_input[CONF_SLAVE]}"
             )
+            self._abort_if_unique_id_configured()
 
-            if not errors:
-                # Check if already configured
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_HOST]}_{user_input[CONF_PORT]}_{user_input[CONF_SLAVE]}"
-                )
-                self._abort_if_unique_id_configured()
-
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input,
-                )
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=user_input,
+            )
 
         # Show configuration form
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST): str,
-                vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+                    vol.Coerce(int), vol.Range(min=1, max=65535)
+                ),
                 vol.Required(CONF_SLAVE, default=DEFAULT_SLAVE): vol.All(
                     vol.Coerce(int), vol.Range(min=1, max=247)
                 ),
