@@ -1,0 +1,269 @@
+FFES Sauna Modbus - Home Assistant Integration
+==============================================
+
+PROJECT STRUCTURE:
+==================
+
+ffes-sauna-modbus/
+│
+├── 📄 README.md                          # Main documentation
+├── 📄 QUICK_START.md                     # Quick start guide
+├── 📄 INSTALLATION_GUIDE.md              # Detailed installation instructions
+├── 📄 CHANGELOG.md                       # Version history
+├── 📄 CONTRIBUTING.md                    # Contribution guidelines
+├── 📄 LICENSE                            # MIT License
+├── 📄 example_configuration.yaml         # Example automations & configs
+├── 📄 .gitignore                         # Git ignore rules
+├── 📄 hacs.json                          # HACS configuration
+├── 📄 info.md                            # HACS info
+│
+├── 📁 .github/
+│   └── workflows/
+│       └── validate.yml                  # GitHub Actions validation
+│
+└── 📁 custom_components/
+    └── 📁 ffes_sauna/                    # Main integration directory
+        │
+        ├── 📄 __init__.py                # Integration setup & services
+        ├── 📄 manifest.json              # Integration metadata
+        ├── 📄 const.py                   # Constants & register definitions
+        ├── 📄 coordinator.py             # Modbus communication coordinator
+        ├── 📄 config_flow.py             # GUI configuration flow
+        ├── 📄 services.yaml              # Service definitions
+        ├── 📄 strings.json               # UI strings
+        │
+        ├── 📄 climate.py                 # Climate entity (thermostat)
+        ├── 📄 sensor.py                  # Sensor entities
+        ├── 📄 switch.py                  # Switch entities
+        ├── 📄 number.py                  # Number entities
+        ├── 📄 select.py                  # Select entity (profile)
+        ├── 📄 binary_sensor.py           # Binary sensor entities
+        │
+        └── 📁 translations/
+            ├── 📄 en.json                # English translations
+            └── 📄 pl.json                # Polish translations
+
+
+KEY COMPONENTS:
+===============
+
+1. CORE FILES
+   - __init__.py         : Main integration logic, service handlers
+   - coordinator.py      : Modbus TCP communication, data polling
+   - const.py           : Register addresses, constants, error codes
+
+2. PLATFORM FILES
+   - climate.py         : Temperature control (thermostat)
+   - sensor.py          : 11 sensors (temp, humidity, status, etc.)
+   - switch.py          : 4 switches (power, ventilation, etc.)
+   - number.py          : 8 number controls (time, intensity, etc.)
+   - select.py          : Profile selector
+   - binary_sensor.py   : 5 binary sensors (error, heating, etc.)
+
+3. CONFIGURATION
+   - config_flow.py     : GUI configuration interface
+   - services.yaml      : Service definitions for Home Assistant
+
+4. DOCUMENTATION
+   - README.md          : Complete feature list & examples
+   - QUICK_START.md     : 10-step quick start guide
+   - INSTALLATION_GUIDE.md : Detailed installation with troubleshooting
+   - example_configuration.yaml : Ready-to-use automations
+
+
+ENTITIES CREATED:
+=================
+
+After installation, the integration creates ~30 entities:
+
+CLIMATE (1)
+  └─ climate.sauna_thermostat
+
+SENSORS (11)
+  ├─ sensor.sauna_current_temperature
+  ├─ sensor.sauna_target_temperature
+  ├─ sensor.sauna_humidity
+  ├─ sensor.sauna_session_time
+  ├─ sensor.sauna_ventilation_time
+  ├─ sensor.sauna_status
+  ├─ sensor.sauna_profile
+  ├─ sensor.sauna_error_code
+  ├─ sensor.sauna_error_message
+  ├─ sensor.sauna_aromatherapy
+  └─ sensor.sauna_software_version
+
+SWITCHES (4)
+  ├─ switch.sauna_power
+  ├─ switch.sauna_ventilation
+  ├─ switch.sauna_frost_protection
+  └─ switch.sauna_infrared_mix
+
+NUMBERS (8)
+  ├─ number.sauna_session_time
+  ├─ number.sauna_ventilation_time
+  ├─ number.sauna_aromatherapy
+  ├─ number.sauna_humidity_target
+  ├─ number.sauna_cpir_g1_power
+  ├─ number.sauna_cpir_g2_power
+  ├─ number.sauna_cpir_g3_power
+  └─ number.sauna_cpir_g4_power
+
+SELECT (1)
+  └─ select.sauna_profile
+
+BINARY SENSORS (5)
+  ├─ binary_sensor.sauna_error
+  ├─ binary_sensor.sauna_heating
+  ├─ binary_sensor.sauna_frost_protection_active
+  ├─ binary_sensor.sauna_wifi_connected
+  └─ binary_sensor.sauna_server_connected
+
+
+SERVICES:
+=========
+
+The integration provides 3 custom services:
+
+1. ffes_sauna.start_session
+   └─ Start a sauna session with custom parameters
+
+2. ffes_sauna.stop_session
+   └─ Stop the current sauna session
+
+3. ffes_sauna.set_profile
+   └─ Change sauna profile (when off)
+
+
+SUPPORTED PROFILES:
+===================
+
+1. Infrared Sauna      (30-60°C)
+2. Dry Sauna          (30-110°C)  ← Most common
+3. Wet Sauna          (30-65°C)
+4. Ventilation        (cooling only)
+5. Steam Bath         (20-50°C)
+6. Infrared CPIR      (advanced IR control)
+7. Infrared MIX       (combined heating)
+
+
+MODBUS REGISTERS:
+=================
+
+Key registers (see const.py for complete list):
+
+HOLDING REGISTERS (16-bit)
+  REG[1]  (addr 0)  : Target Temperature
+  REG[2]  (addr 1)  : Actual Temperature
+  REG[4]  (addr 3)  : Sauna Profile (1-7)
+  REG[5]  (addr 4)  : Session Time (minutes)
+  REG[10] (addr 9)  : Humidity Set Value
+  REG[11] (addr 10) : Error Code
+  REG[15] (addr 14) : Humidity Actual
+  REG[20] (addr 19) : Controller Status
+
+COIL REGISTERS (1-bit)
+  REG[1]  (addr 0)  : Controller State
+  REG[2]  (addr 1)  : Session State
+  REG[3]  (addr 2)  : Ventilation State
+
+
+TECHNICAL DETAILS:
+==================
+
+Protocol      : Modbus TCP
+Default Port  : 502
+Slave ID      : 1 (configurable 1-247)
+Update Rate   : 5-120 seconds (default: 10s)
+HA Version    : 2024.1.0+
+Python Lib    : pymodbus 3.6.8
+Architecture  : Async/await coordinator pattern
+
+
+FILES STATISTICS:
+=================
+
+Total Files       : 26
+Python Files      : 11
+Config Files      : 6
+Documentation     : 6
+Translation Files : 2
+Workflow Files    : 1
+
+Lines of Code     : ~2,500+ lines
+Documentation     : ~1,500+ lines
+Examples          : 20+ automations
+
+
+FEATURES HIGHLIGHTS:
+====================
+
+✅ Full temperature control
+✅ All 7 sauna profiles supported
+✅ Session timer (1-2000 minutes)
+✅ Humidity control (wet sauna)
+✅ Aromatherapy control
+✅ Ventilation management
+✅ CPIR infrared groups (4 groups)
+✅ Error monitoring & codes
+✅ Frost protection
+✅ GUI configuration
+✅ 3 custom services
+✅ Polish & English translations
+✅ HACS compatible
+✅ Comprehensive documentation
+✅ Example automations
+✅ GitHub Actions validation
+
+
+INSTALLATION:
+=============
+
+1. Via HACS (Recommended)
+   └─ Add custom repo → Install → Restart
+
+2. Manual
+   └─ Copy files → Restart → Configure
+
+See INSTALLATION_GUIDE.md for details.
+
+
+QUICK LINKS:
+============
+
+📖 Full Docs    : README.md
+🚀 Quick Start  : QUICK_START.md
+💾 Install      : INSTALLATION_GUIDE.md
+📝 Examples     : example_configuration.yaml
+🤝 Contribute   : CONTRIBUTING.md
+📜 License      : LICENSE (MIT)
+
+
+SUPPORT:
+========
+
+🐛 Bug Reports  : GitHub Issues
+💬 Discussions  : GitHub Discussions
+📧 Questions    : GitHub Issues
+⭐ Star Project : GitHub Repository
+
+
+VERSION:
+========
+
+Current Version : 1.0.0
+Release Date    : 2025-10-29
+Status          : Stable
+Compatibility   : Home Assistant 2024.1.0+
+
+
+AUTHOR:
+=======
+
+Created with ❤️ for the Home Assistant community
+Based on FFES Modbus TCP documentation
+Not officially affiliated with FFES
+
+
+===============================================
+End of Project Structure Documentation
+===============================================

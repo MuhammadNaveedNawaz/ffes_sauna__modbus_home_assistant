@@ -1,0 +1,70 @@
+# Services for FFES Sauna Integration
+
+start_session:
+  name: Start Session
+  description: Start a sauna session with custom parameters
+  fields:
+    profile:
+      name: Profile
+      description: Sauna profile number (1=Infrared, 2=Dry, 3=Wet, 4=Ventilation, 5=Steam Bath, 6=CPIR, 7=MIX)
+      required: true
+      example: 2
+      selector:
+        number:
+          min: 1
+          max: 7
+          mode: slider
+    temperature:
+      name: Temperature
+      description: Target temperature in Celsius
+      required: true
+      example: 85
+      selector:
+        number:
+          min: 20
+          max: 110
+          unit_of_measurement: "°C"
+    duration:
+      name: Duration
+      description: Session duration in minutes
+      required: true
+      example: 60
+      selector:
+        number:
+          min: 1
+          max: 2000
+          unit_of_measurement: "min"
+    humidity:
+      name: Humidity
+      description: Target humidity (optional, for wet sauna)
+      required: false
+      example: 50
+      selector:
+        number:
+          min: 0
+          max: 100
+          unit_of_measurement: "%"
+
+stop_session:
+  name: Stop Session
+  description: Stop the current sauna session
+
+set_profile:
+  name: Set Profile
+  description: Change the sauna profile (can only be done when sauna is off)
+  fields:
+    profile:
+      name: Profile
+      description: Sauna profile name
+      required: true
+      example: "dry_sauna"
+      selector:
+        select:
+          options:
+            - "infrared"
+            - "dry_sauna"
+            - "wet_sauna"
+            - "ventilation"
+            - "steam_bath"
+            - "infrared_cpir"
+            - "infrared_mix"

@@ -1,0 +1,329 @@
+# Example Home Assistant Configuration for FFES Sauna
+# Copy and adjust these examples to your configuration.yaml or automations.yaml
+
+# ============================================
+# AUTOMATIONS
+# ============================================
+
+automation:
+  # Start sauna before arriving home
+  - alias: "Start Sauna When Leaving Work"
+    trigger:
+      - platform: zone
+        entity_id: person.john
+        zone: zone.work
+        event: leave
+    action:
+      - service: ffes_sauna.start_session
+        target:
+          entity_id: climate.sauna_thermostat
+        data:
+          profile: 2  # Dry sauna
+          temperature: 85
+          duration: 90
+
+  # Notify when sauna is ready
+  - alias: "Sauna Ready Notification"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.sauna_current_temperature
+        above: 80
+    condition:
+      - condition: state
+        entity_id: switch.sauna_power
+        state: "on"
+      - condition: template
+        value_template: "{{ (as_timestamp(now()) - as_timestamp(state_attr('automation.sauna_ready_notification', 'last_triggered') | default(0))) > 1800 }}"
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "Sauna Ready! 🧖"
+          message: "Your sauna has reached {{ states('sensor.sauna_current_temperature') }}°C"
+          data:
+            actions:
+              - action: "STOP_SAUNA"
+                title: "Stop Sauna"
+
+  # Daily evening sauna schedule
+  - alias: "Daily Evening Sauna"
+    trigger:
+      - platform: time
+        at: "18:00:00"
+    condition:
+      - condition: time
+        weekday:
+          - fri
+          - sat
+    action:
+      - service: ffes_sauna.start_session
+        target:
+          entity_id: climate.sauna_thermostat
+        data:
+          profile: 2
+          temperature: 85
+          duration: 120
+
+  # Safety timeout - auto stop after 3 hours
+  - alias: "Sauna Safety Timeout"
+    trigger:
+      - platform: state
+        entity_id: switch.sauna_power
+        to: "on"
+        for:
+          hours: 3
+    action:
+      - service: ffes_sauna.stop_session
+        target:
+          entity_id: climate.sauna_thermostat
+      - service: notify.mobile_app
+        data:
+          title: "Sauna Auto-Stopped"
+          message: "Sauna was automatically stopped after 3 hours for safety"
+          data:
+            tag: "sauna_safety"
+
+  # Error notification
+  - alias: "Sauna Error Alert"
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.sauna_error
+        to: "on"
+    action:
+      - service: notify.mobile_app
+        data:
+          title: "⚠️ Sauna Error"
+          message: "{{ states('sensor.sauna_error_message') }}"
+          data:
+            tag: "sauna_error"
+            priority: "high"
+
+  # Auto-ventilation after session
+  - alias: "Auto Ventilation After Sauna"
+    trigger:
+      - platform: state
+        entity_id: switch.sauna_power
+        from: "on"
+        to: "off"
+    action:
+      - delay:
+          minutes: 5
+      - service: switch.turn_on
+        target:
+          entity_id: switch.sauna_ventilation
+      - delay:
+          minutes: 30
+      - service: switch.turn_off
+        target:
+          entity_id: switch.sauna_ventilation
+
+  # Voice control integration
+  - alias: "Alexa - Start Sauna"
+    trigger:
+      - platform: event
+        event_type: alexa_actionable_notification
+        event_data:
+          event_id: start_sauna
+    action:
+      - service: ffes_sauna.start_session
+        target:
+          entity_id: climate.sauna_thermostat
+        data:
+          profile: 2
+          temperature: 85
+          duration: 90
+
+# ============================================
+# SCRIPTS
+# ============================================
+
+script:
+  # Quick start - dry sauna 85°C for 60 min
+  quick_start_sauna:
+    alias: "Quick Start Sauna"
+    sequence:
+      - service: ffes_sauna.start_session
+        target:
+          entity_id: climate.sauna_thermostat
+        data:
+          profile: 2
+          temperature: 85
+          duration: 60
+      - service: notify.mobile_app
+        data:
+          message: "Sauna starting - will be ready in ~20 minutes"
+
+  # Relaxation mode - infrared
+  relaxation_sauna:
+    alias: "Relaxation Sauna Mode"
+    sequence:
+      - service: ffes_sauna.start_session
+        target:
+          entity_id: climate.sauna_thermostat
+        data:
+          profile: 1  # Infrared
+          temperature: 50
+          duration: 45
+      - service: number.set_value
+        target:
+          entity_id: number.sauna_aromatherapy
+        data:
+          value: 80
+
+  # Deep heat - wet sauna
+  deep_heat_sauna:
+    alias: "Deep Heat Sauna"
+    sequence:
+      - service: ffes_sauna.start_session
+        target:
+          entity_id: climate.sauna_thermostat
+        data:
+          profile: 3  # Wet sauna
+          temperature: 65
+          duration: 30
+          humidity: 60
+
+# ============================================
+# INPUT HELPERS (Optional)
+# ============================================
+
+input_select:
+  sauna_quick_profiles:
+    name: Quick Sauna Profiles
+    options:
+      - "Quick Start (85°C, 60min)"
+      - "Long Session (90°C, 120min)"
+      - "Gentle (70°C, 45min)"
+      - "Infrared (50°C, 30min)"
+    icon: mdi:fire
+
+input_number:
+  sauna_default_temperature:
+    name: Default Sauna Temperature
+    min: 30
+    max: 110
+    step: 5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer
+
+  sauna_default_duration:
+    name: Default Session Duration
+    min: 15
+    max: 180
+    step: 15
+    unit_of_measurement: "min"
+    icon: mdi:timer
+
+input_boolean:
+  sauna_auto_notifications:
+    name: Enable Sauna Notifications
+    icon: mdi:bell
+
+# ============================================
+# TEMPLATE SENSORS (Optional)
+# ============================================
+
+template:
+  - sensor:
+      - name: "Sauna Time Remaining"
+        unit_of_measurement: "min"
+        state: >
+          {% if is_state('switch.sauna_power', 'on') %}
+            {{ states('number.sauna_session_time') | int }}
+          {% else %}
+            0
+          {% endif %}
+        icon: mdi:timer-sand
+
+      - name: "Sauna Status Text"
+        state: >
+          {% if is_state('binary_sensor.sauna_error', 'on') %}
+            Error: {{ states('sensor.sauna_error_message') }}
+          {% elif is_state('switch.sauna_power', 'on') %}
+            {% if states('sensor.sauna_current_temperature') | float >= states('sensor.sauna_target_temperature') | float - 5 %}
+              Ready ({{ states('sensor.sauna_current_temperature') }}°C)
+            {% else %}
+              Heating ({{ states('sensor.sauna_current_temperature') }}°C → {{ states('sensor.sauna_target_temperature') }}°C)
+            {% endif %}
+          {% else %}
+            Off
+          {% endif %}
+        icon: mdi:information
+
+# ============================================
+# DASHBOARD CARDS
+# ============================================
+
+# Add these to your Lovelace dashboard configuration:
+
+# Main Control Card
+type: vertical-stack
+cards:
+  - type: thermostat
+    entity: climate.sauna_thermostat
+    name: Sauna Control
+  
+  - type: entities
+    title: Sauna Status
+    entities:
+      - entity: sensor.sauna_current_temperature
+        name: Temperature
+      - entity: sensor.sauna_humidity
+        name: Humidity
+      - entity: sensor.sauna_status
+        name: Status
+      - entity: number.sauna_session_time
+        name: Session Time
+      - entity: select.sauna_profile
+        name: Profile
+  
+  - type: conditional
+    conditions:
+      - entity: binary_sensor.sauna_error
+        state: "on"
+    card:
+      type: markdown
+      content: >
+        **⚠️ Error:** {{ states('sensor.sauna_error_message') }}
+
+# Quick Actions Card
+type: horizontal-stack
+cards:
+  - type: button
+    entity: script.quick_start_sauna
+    name: Quick Start
+    icon: mdi:play-circle
+    tap_action:
+      action: call-service
+      service: script.quick_start_sauna
+  
+  - type: button
+    entity: script.relaxation_sauna
+    name: Relaxation
+    icon: mdi:spa
+    tap_action:
+      action: call-service
+      service: script.relaxation_sauna
+  
+  - type: button
+    entity: switch.sauna_power
+    name: Stop
+    icon: mdi:stop-circle
+    tap_action:
+      action: call-service
+      service: switch.turn_off
+      target:
+        entity_id: switch.sauna_power
+
+# Advanced Controls Card
+type: entities
+title: Advanced Controls
+entities:
+  - entity: switch.sauna_ventilation
+    name: Ventilation
+  - entity: number.sauna_aromatherapy
+    name: Aromatherapy
+  - entity: switch.sauna_frost_protection
+    name: Frost Protection
+  - type: divider
+  - entity: sensor.sauna_software_version
+    name: Software Version

@@ -1,0 +1,153 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Konfiguracja FFES Sauna",
+        "description": "Wprowadź dane połączenia do sterownika FFES Sauna",
+        "data": {
+          "host": "Adres IP",
+          "port": "Port",
+          "slave": "Modbus Slave ID",
+          "name": "Nazwa",
+          "scan_interval": "Interwał odświeżania (sekundy)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nie udało się połączyć ze sterownikiem sauny. Sprawdź adres IP i port.",
+      "invalid_slave": "Nieprawidłowy Modbus Slave ID. Zweryfikuj konfigurację.",
+      "unknown": "Wystąpił nieoczekiwany błąd"
+    },
+    "abort": {
+      "already_configured": "Ten sterownik sauny jest już skonfigurowany"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Opcje FFES Sauna",
+        "data": {
+          "scan_interval": "Interwał odświeżania (sekundy)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature_actual": {
+        "name": "Aktualna temperatura"
+      },
+      "temperature_set": {
+        "name": "Temperatura docelowa"
+      },
+      "humidity": {
+        "name": "Wilgotność"
+      },
+      "session_time": {
+        "name": "Czas seansu"
+      },
+      "ventilation_time": {
+        "name": "Czas wentylacji"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "profile": {
+        "name": "Profil"
+      },
+      "error_code": {
+        "name": "Kod błędu"
+      },
+      "error_message": {
+        "name": "Komunikat błędu"
+      },
+      "aromatherapy": {
+        "name": "Aromaterapia"
+      },
+      "software_version": {
+        "name": "Wersja oprogramowania"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Zasilanie"
+      },
+      "ventilation": {
+        "name": "Wentylacja"
+      },
+      "frost_protection": {
+        "name": "Ochrona przed mrozem"
+      },
+      "infrared_mix": {
+        "name": "Podczerwień MIX"
+      }
+    },
+    "number": {
+      "session_time": {
+        "name": "Czas seansu"
+      },
+      "ventilation_time": {
+        "name": "Czas wentylacji"
+      },
+      "aromatherapy": {
+        "name": "Aromaterapia"
+      },
+      "humidity_target": {
+        "name": "Docelowa wilgotność"
+      },
+      "cpir_g1_power": {
+        "name": "CPIR Grupa 1 Moc"
+      },
+      "cpir_g2_power": {
+        "name": "CPIR Grupa 2 Moc"
+      },
+      "cpir_g3_power": {
+        "name": "CPIR Grupa 3 Moc"
+      },
+      "cpir_g4_power": {
+        "name": "CPIR Grupa 4 Moc"
+      }
+    },
+    "select": {
+      "profile": {
+        "name": "Profil"
+      }
+    },
+    "binary_sensor": {
+      "error": {
+        "name": "Błąd"
+      },
+      "heating": {
+        "name": "Grzanie"
+      },
+      "frost_protection_active": {
+        "name": "Ochrona przed mrozem aktywna"
+      },
+      "wifi_connected": {
+        "name": "WiFi połączone"
+      },
+      "server_connected": {
+        "name": "Serwer połączony"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Termostat"
+      }
+    }
+  },
+  "services": {
+    "start_session": {
+      "name": "Rozpocznij seans",
+      "description": "Rozpocznij seans sauny z własnymi parametrami"
+    },
+    "stop_session": {
+      "name": "Zatrzymaj seans",
+      "description": "Zatrzymaj aktualny seans sauny"
+    },
+    "set_profile": {
+      "name": "Ustaw profil",
+      "description": "Zmień profil sauny"
+    }
+  }
+}

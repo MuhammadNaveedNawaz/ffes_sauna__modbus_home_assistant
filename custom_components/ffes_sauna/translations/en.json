@@ -1,0 +1,153 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "FFES Sauna Configuration",
+        "description": "Enter the connection details for your FFES Sauna controller",
+        "data": {
+          "host": "IP Address",
+          "port": "Port",
+          "slave": "Modbus Slave ID",
+          "name": "Name",
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the sauna controller. Please check the IP address and port.",
+      "invalid_slave": "Invalid Modbus Slave ID. Please verify the configuration.",
+      "unknown": "Unexpected error occurred"
+    },
+    "abort": {
+      "already_configured": "This sauna controller is already configured"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "FFES Sauna Options",
+        "data": {
+          "scan_interval": "Scan Interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "temperature_actual": {
+        "name": "Current Temperature"
+      },
+      "temperature_set": {
+        "name": "Target Temperature"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "session_time": {
+        "name": "Session Time"
+      },
+      "ventilation_time": {
+        "name": "Ventilation Time"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "profile": {
+        "name": "Profile"
+      },
+      "error_code": {
+        "name": "Error Code"
+      },
+      "error_message": {
+        "name": "Error Message"
+      },
+      "aromatherapy": {
+        "name": "Aromatherapy"
+      },
+      "software_version": {
+        "name": "Software Version"
+      }
+    },
+    "switch": {
+      "power": {
+        "name": "Power"
+      },
+      "ventilation": {
+        "name": "Ventilation"
+      },
+      "frost_protection": {
+        "name": "Frost Protection"
+      },
+      "infrared_mix": {
+        "name": "Infrared Mix"
+      }
+    },
+    "number": {
+      "session_time": {
+        "name": "Session Time"
+      },
+      "ventilation_time": {
+        "name": "Ventilation Time"
+      },
+      "aromatherapy": {
+        "name": "Aromatherapy"
+      },
+      "humidity_target": {
+        "name": "Target Humidity"
+      },
+      "cpir_g1_power": {
+        "name": "CPIR Group 1 Power"
+      },
+      "cpir_g2_power": {
+        "name": "CPIR Group 2 Power"
+      },
+      "cpir_g3_power": {
+        "name": "CPIR Group 3 Power"
+      },
+      "cpir_g4_power": {
+        "name": "CPIR Group 4 Power"
+      }
+    },
+    "select": {
+      "profile": {
+        "name": "Profile"
+      }
+    },
+    "binary_sensor": {
+      "error": {
+        "name": "Error"
+      },
+      "heating": {
+        "name": "Heating"
+      },
+      "frost_protection_active": {
+        "name": "Frost Protection Active"
+      },
+      "wifi_connected": {
+        "name": "WiFi Connected"
+      },
+      "server_connected": {
+        "name": "Server Connected"
+      }
+    },
+    "climate": {
+      "thermostat": {
+        "name": "Thermostat"
+      }
+    }
+  },
+  "services": {
+    "start_session": {
+      "name": "Start Session",
+      "description": "Start a sauna session with custom parameters"
+    },
+    "stop_session": {
+      "name": "Stop Session",
+      "description": "Stop the current sauna session"
+    },
+    "set_profile": {
+      "name": "Set Profile",
+      "description": "Change the sauna profile"
+    }
+  }
+}
