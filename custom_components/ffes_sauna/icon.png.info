@@ -1,0 +1,28 @@
+IKONA DLA INTEGRACJI
+=====================
+
+Home Assistant automatycznie wykryje ikonę jeśli umieścisz plik:
+- icon.png (256x256 lub większy)
+- icon@2x.png (512x512 lub większy)
+
+Możesz też użyć:
+- icon.svg (format wektorowy - najlepszy)
+
+OPCJE DLA IKONY SAUNY:
+1. Użyj ikony "mdi:sauna" (już wbudowana w HA)
+2. Stwórz własną PNG/SVG
+
+JAK DODAĆ WŁASNĄ IKONĘ PNG:
+1. Stwórz ikonę 256x256 px (lub 512x512 dla @2x)
+2. Zapisz jako: custom_components/ffes_sauna/icon.png
+3. Można użyć online narzędzi jak:
+   - https://www.canva.com
+   - https://www.figma.com
+   - https://favicon.io
+
+PROPONOWANE ELEMENTY:
+- 🔥 Płomień/ogień
+- 🧖 Osoba w saunie
+- 🌡️ Termometr
+- 💧 Para/kropla wody
+- 🪵 Drewno
