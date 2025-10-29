@@ -9,6 +9,8 @@ try:
     from pymodbus.client import ModbusTcpClient
 except ImportError:
     from pymodbus.client.sync import ModbusTcpClient as ModbusTcpClient
+
+import pymodbus
 from pymodbus.exceptions import ModbusException
 
 from homeassistant.core import HomeAssistant
@@ -47,6 +49,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Detect pymodbus version to use correct parameter names
+PYMODBUS_MAJOR_VERSION = 3
+try:
+    PYMODBUS_MAJOR_VERSION = int(pymodbus.__version__.split('.')[0])
+    _LOGGER.debug("Detected pymodbus version: %s", pymodbus.__version__)
+except (AttributeError, ValueError, IndexError):
+    _LOGGER.warning("Could not detect pymodbus version, assuming 3.x")
+
 
 
 
@@ -78,6 +88,8 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _connect(self) -> None:
         """Connect to the Modbus device."""
         try:
+            # W pymodbus 3.6+ nie ma parametru slave w metodach read/write
+            # Trzeba go przekazać każdorazowo lub użyć bez niego
             self._client = ModbusTcpClient(
                 host=self.host,
                 port=self.port,
@@ -85,7 +97,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
             # Connect to the device
             self._client.connect()
-            _LOGGER.debug("Modbus client created and connected for %s:%s", self.host, self.port)
+            _LOGGER.debug("Modbus client created and connected for %s:%s (slave=%s)", self.host, self.port, self.slave)
         except Exception as err:
             _LOGGER.error("Error creating Modbus client: %s", err)
             raise
@@ -106,7 +118,11 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             # Read 16-bit holding registers (addresses 0-49)
-            result = self._client.read_holding_registers(0, 50, slave=self.slave)
+            # pymodbus 3.x uses 'slave', 4.0+ uses 'device_id'
+            if PYMODBUS_MAJOR_VERSION >= 4:
+                result = self._client.read_holding_registers(0, count=50, device_id=self.slave)
+            else:
+                result = self._client.read_holding_registers(0, 50, slave=self.slave)
             
             if result.isError():
                 raise ModbusException(f"Error reading holding registers: {result}")
@@ -155,7 +171,10 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data["controller_model"] = registers[REG_CONTROLLER_MODEL]
 
             # Read coil registers (1-bit values)
-            coil_result = self._client.read_coils(0, 56, slave=self.slave)
+            if PYMODBUS_MAJOR_VERSION >= 4:
+                coil_result = self._client.read_coils(0, count=56, device_id=self.slave)
+            else:
+                coil_result = self._client.read_coils(0, 56, slave=self.slave)
             
             if coil_result.isError():
                 raise ModbusException(f"Error reading coils: {coil_result}")
@@ -181,7 +200,10 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _write_register_sync(self, address: int, value: int) -> None:
         """Synchronously write a register."""
-        result = self._client.write_register(address, value, slave=self.slave)
+        if PYMODBUS_MAJOR_VERSION >= 4:
+            result = self._client.write_register(address, value, device_id=self.slave)
+        else:
+            result = self._client.write_register(address, value, slave=self.slave)
         
         if result.isError():
             raise ModbusException(f"Error writing register {address}: {result}")
@@ -190,7 +212,10 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _write_coil_sync(self, address: int, value: bool) -> None:
         """Synchronously write a coil."""
-        result = self._client.write_coil(address, value, slave=self.slave)
+        if PYMODBUS_MAJOR_VERSION >= 4:
+            result = self._client.write_coil(address, value, device_id=self.slave)
+        else:
+            result = self._client.write_coil(address, value, slave=self.slave)
         
         if result.isError():
             raise ModbusException(f"Error writing coil {address}: {result}")
