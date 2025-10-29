@@ -7,6 +7,7 @@ from typing import Any
 
 from pymodbus.client import ModbusTcpClient
 from pymodbus.exceptions import ModbusException
+import pymodbus
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -45,6 +46,20 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_modbus_kwargs(slave_id: int) -> dict:
+    """Zwraca odpowiedni parametr dla wersji pymodbus.
+    
+    Pymodbus 3.x używa 'slave', starsze wersje używają 'unit'.
+    """
+    try:
+        major_version = int(pymodbus.__version__.split('.')[0])
+        if major_version >= 3:
+            return {"slave": slave_id}
+    except (AttributeError, ValueError, IndexError):
+        pass
+    return {"unit": slave_id}
+
+
 class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching FFES Sauna data."""
 
@@ -73,49 +88,39 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _connect(self) -> None:
         """Connect to the Modbus device."""
         try:
-            if self._client:
-                self._client.close()
-            
             self._client = ModbusTcpClient(
                 host=self.host,
                 port=self.port,
                 timeout=5,
             )
-            
-            if not self._client.connect():
-                raise ConnectionError(f"Failed to connect to {self.host}:{self.port}")
-            
-            _LOGGER.info("Connected to FFES Sauna at %s:%s", self.host, self.port)
+            _LOGGER.debug("Modbus client created for %s:%s", self.host, self.port)
         except Exception as err:
-            _LOGGER.error("Error connecting to Modbus device: %s", err)
-            self._client = None
+            _LOGGER.error("Error creating Modbus client: %s", err)
             raise
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from the Modbus device."""
-        if not self._client or not self._client.is_socket_open():
-            _LOGGER.warning("Modbus connection lost, attempting to reconnect...")
-            try:
-                await self.hass.async_add_executor_job(self._connect)
-            except Exception as err:
-                raise UpdateFailed(f"Failed to reconnect: {err}") from err
-
+        """Fetch data from Modbus device."""
         try:
             return await self.hass.async_add_executor_job(self._read_registers)
-        except Exception as err:
-            _LOGGER.error("Error reading Modbus registers: %s", err)
+        except ModbusException as err:
             raise UpdateFailed(f"Error communicating with device: {err}") from err
+        except Exception as err:
+            _LOGGER.error("Unexpected error reading Modbus registers: %s", err)
+            raise UpdateFailed(f"Error reading Modbus registers: {err}") from err
 
     def _read_registers(self) -> dict[str, Any]:
         """Read all necessary registers from the device."""
         data = {}
 
         try:
+            # Przygotuj parametry kompatybilne z wersją pymodbus
+            kwargs = _get_modbus_kwargs(self.slave)
+            
             # Read 16-bit holding registers (addresses 0-49)
             result = self._client.read_holding_registers(
                 address=0,
                 count=50,
-                unit=self.slave,
+                **kwargs
             )
             
             if result.isError():
@@ -164,56 +169,43 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data["software_version"] = registers[REG_MODULE_SOFTWARE_VERSION]
             data["controller_model"] = registers[REG_CONTROLLER_MODEL]
 
-            # Read coil registers (1-bit values)
+            # Read coil registers (1-bit values) - używamy tych samych kwargs
             coil_result = self._client.read_coils(
                 address=0,
                 count=56,
-                unit=self.slave,
+                **kwargs
             )
             
-            if not coil_result.isError():
-                coils = coil_result.bits
-                
-                data["ventilation_state"] = coils[REG_VENTILATION_STATE]
-                data["frost_protection"] = coils[REG_FROST_PROTECTION]
-                data["frost_protection_active"] = coils[REG_FROST_PROTECTION_STATUS]
-                data["infrared_mix_status"] = coils[REG_INFRARED_MIX_STATUS]
-                data["wifi_connected"] = coils[REG_WIFI_CONNECTION]
-                data["server_connected"] = coils[REG_SERVER_CONNECTION]
+            if coil_result.isError():
+                raise ModbusException(f"Error reading coils: {coil_result}")
 
-            # Calculate additional states
-            data["is_heating"] = status_num == 1  # STATUS_HEAT
-            data["is_on"] = status_num in [1, 2]  # HEAT or VENT
+            coils = coil_result.bits
+            
+            # Parse coil states
+            data["wifi_connection"] = coils[REG_WIFI_CONNECTION]
+            data["server_connection"] = coils[REG_SERVER_CONNECTION]
+            data["frost_protection"] = coils[REG_FROST_PROTECTION]
+            data["frost_protection_status"] = coils[REG_FROST_PROTECTION_STATUS]
+            data["ventilation_state"] = coils[REG_VENTILATION_STATE]
+            data["infrared_mix_status"] = coils[REG_INFRARED_MIX_STATUS]
 
             _LOGGER.debug("Successfully read registers: %s", data)
             return data
 
-        except ModbusException as err:
-            _LOGGER.error("Modbus error: %s", err)
+        except ModbusException:
             raise
         except Exception as err:
-            _LOGGER.error("Unexpected error reading registers: %s", err)
-            raise
-
-    async def write_register(self, address: int, value: int) -> None:
-        """Write a value to a holding register."""
-        if not self._client or not self._client.is_socket_open():
-            raise ConnectionError("Not connected to Modbus device")
-
-        try:
-            await self.hass.async_add_executor_job(
-                self._write_register_sync, address, value
-            )
-        except Exception as err:
-            _LOGGER.error("Error writing register %s: %s", address, err)
-            raise
+            _LOGGER.error("Error parsing Modbus data: %s", err)
+            raise ModbusException(f"Error parsing Modbus data: {err}") from err
 
     def _write_register_sync(self, address: int, value: int) -> None:
         """Synchronously write a register."""
+        kwargs = _get_modbus_kwargs(self.slave)
+        
         result = self._client.write_register(
             address=address,
             value=value,
-            unit=self.slave,
+            **kwargs
         )
         
         if result.isError():
@@ -221,25 +213,14 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         
         _LOGGER.debug("Wrote value %s to register %s", value, address)
 
-    async def write_coil(self, address: int, value: bool) -> None:
-        """Write a value to a coil."""
-        if not self._client or not self._client.is_socket_open():
-            raise ConnectionError("Not connected to Modbus device")
-
-        try:
-            await self.hass.async_add_executor_job(
-                self._write_coil_sync, address, value
-            )
-        except Exception as err:
-            _LOGGER.error("Error writing coil %s: %s", address, err)
-            raise
-
     def _write_coil_sync(self, address: int, value: bool) -> None:
         """Synchronously write a coil."""
+        kwargs = _get_modbus_kwargs(self.slave)
+        
         result = self._client.write_coil(
             address=address,
             value=value,
-            unit=self.slave,
+            **kwargs
         )
         
         if result.isError():
@@ -247,10 +228,38 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         
         _LOGGER.debug("Wrote value %s to coil %s", value, address)
 
+    async def async_write_register(self, address: int, value: int) -> None:
+        """Write a single register."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._write_register_sync, address, value
+            )
+            # Request data refresh after write
+            await self.async_request_refresh()
+        except ModbusException as err:
+            _LOGGER.error("Error writing register %s: %s", address, err)
+            raise
+        except Exception as err:
+            _LOGGER.error("Unexpected error writing register %s: %s", address, err)
+            raise
+
+    async def async_write_coil(self, address: int, value: bool) -> None:
+        """Write a single coil."""
+        try:
+            await self.hass.async_add_executor_job(
+                self._write_coil_sync, address, value
+            )
+            # Request data refresh after write
+            await self.async_request_refresh()
+        except ModbusException as err:
+            _LOGGER.error("Error writing coil %s: %s", address, err)
+            raise
+        except Exception as err:
+            _LOGGER.error("Unexpected error writing coil %s: %s", address, err)
+            raise
+
     async def async_shutdown(self) -> None:
-        """Shutdown the coordinator."""
+        """Shutdown coordinator."""
         if self._client:
             await self.hass.async_add_executor_job(self._client.close)
-            _LOGGER.info("Closed Modbus connection")
-
-
+            _LOGGER.debug("Modbus client closed")
