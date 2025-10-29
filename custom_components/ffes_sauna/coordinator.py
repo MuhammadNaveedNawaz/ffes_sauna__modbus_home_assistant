@@ -7,7 +7,6 @@ from typing import Any
 
 from pymodbus.client import ModbusTcpClient
 from pymodbus.exceptions import ModbusException
-import pymodbus
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -46,18 +45,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_modbus_kwargs(slave_id: int) -> dict:
-    """Zwraca odpowiedni parametr dla wersji pymodbus.
-    
-    Pymodbus 3.x używa 'slave', starsze wersje używają 'unit'.
-    """
-    try:
-        major_version = int(pymodbus.__version__.split('.')[0])
-        if major_version >= 3:
-            return {"slave": slave_id}
-    except (AttributeError, ValueError, IndexError):
-        pass
-    return {"unit": slave_id}
 
 
 class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -113,14 +100,11 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data = {}
 
         try:
-            # Przygotuj parametry kompatybilne z wersją pymodbus
-            kwargs = _get_modbus_kwargs(self.slave)
-            
             # Read 16-bit holding registers (addresses 0-49)
             result = self._client.read_holding_registers(
                 address=0,
                 count=50,
-                **kwargs
+                unit=self.slave
             )
             
             if result.isError():
@@ -169,11 +153,11 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data["software_version"] = registers[REG_MODULE_SOFTWARE_VERSION]
             data["controller_model"] = registers[REG_CONTROLLER_MODEL]
 
-            # Read coil registers (1-bit values) - używamy tych samych kwargs
+            # Read coil registers (1-bit values)
             coil_result = self._client.read_coils(
                 address=0,
                 count=56,
-                **kwargs
+                unit=self.slave
             )
             
             if coil_result.isError():
@@ -200,12 +184,10 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _write_register_sync(self, address: int, value: int) -> None:
         """Synchronously write a register."""
-        kwargs = _get_modbus_kwargs(self.slave)
-        
         result = self._client.write_register(
             address=address,
             value=value,
-            **kwargs
+            unit=self.slave
         )
         
         if result.isError():
@@ -215,12 +197,10 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _write_coil_sync(self, address: int, value: bool) -> None:
         """Synchronously write a coil."""
-        kwargs = _get_modbus_kwargs(self.slave)
-        
         result = self._client.write_coil(
             address=address,
             value=value,
-            **kwargs
+            unit=self.slave
         )
         
         if result.isError():
