@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.1] - 2025-10-29
+
+### Fixed
+- Fixed "500 Internal Server Error" when loading config flow
+- Fixed pymodbus version conflict - changed from `==3.6.8` to `>=3.6.0` for compatibility with Home Assistant 2025.x
+- Simplified config flow to avoid timeout issues
+- Removed unnecessary validation during initial setup
+
+### Changed
+- Config flow no longer validates Modbus connection during setup (validation happens on first data refresh)
+- Updated pymodbus requirement to `>=3.6.0` for better compatibility
+
 ## [1.0.0] - 2025-10-29
 
 ### Added
