@@ -5,7 +5,10 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pymodbus.client import ModbusTcpClient
+try:
+    from pymodbus.client import ModbusTcpClient
+except ImportError:
+    from pymodbus.client.sync import ModbusTcpClient as ModbusTcpClient
 from pymodbus.exceptions import ModbusException
 
 from homeassistant.core import HomeAssistant
@@ -80,7 +83,9 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 port=self.port,
                 timeout=5,
             )
-            _LOGGER.debug("Modbus client created for %s:%s", self.host, self.port)
+            # Connect to the device
+            self._client.connect()
+            _LOGGER.debug("Modbus client created and connected for %s:%s", self.host, self.port)
         except Exception as err:
             _LOGGER.error("Error creating Modbus client: %s", err)
             raise
@@ -101,11 +106,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             # Read 16-bit holding registers (addresses 0-49)
-            result = self._client.read_holding_registers(
-                address=0,
-                count=50,
-                unit=self.slave
-            )
+            result = self._client.read_holding_registers(0, 50, slave=self.slave)
             
             if result.isError():
                 raise ModbusException(f"Error reading holding registers: {result}")
@@ -154,11 +155,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data["controller_model"] = registers[REG_CONTROLLER_MODEL]
 
             # Read coil registers (1-bit values)
-            coil_result = self._client.read_coils(
-                address=0,
-                count=56,
-                unit=self.slave
-            )
+            coil_result = self._client.read_coils(0, 56, slave=self.slave)
             
             if coil_result.isError():
                 raise ModbusException(f"Error reading coils: {coil_result}")
@@ -184,11 +181,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _write_register_sync(self, address: int, value: int) -> None:
         """Synchronously write a register."""
-        result = self._client.write_register(
-            address=address,
-            value=value,
-            unit=self.slave
-        )
+        result = self._client.write_register(address, value, slave=self.slave)
         
         if result.isError():
             raise ModbusException(f"Error writing register {address}: {result}")
@@ -197,11 +190,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _write_coil_sync(self, address: int, value: bool) -> None:
         """Synchronously write a coil."""
-        result = self._client.write_coil(
-            address=address,
-            value=value,
-            unit=self.slave
-        )
+        result = self._client.write_coil(address, value, slave=self.slave)
         
         if result.isError():
             raise ModbusException(f"Error writing coil {address}: {result}")
