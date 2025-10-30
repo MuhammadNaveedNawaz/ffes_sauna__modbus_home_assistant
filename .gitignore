@@ -71,3 +71,6 @@ home-assistant_v2.db
 
 # Testing
 .pytest_cache/
+
+# Claude Code
+.claude/

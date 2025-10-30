@@ -5,6 +5,35 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2025-10-30
+
+### Fixed
+- **CRITICAL**: Fixed register offset from 2 to 1 - data was shifted by one register causing incorrect readings
+- **CRITICAL**: Fixed register count from 60 to 50 - prevented "ILLEGAL DATA ADDRESS" error
+- Fixed climate entity HVAC mode not displaying correctly (added `is_on` and `is_heating` to coordinator data)
+- Fixed AttributeError when using switches/controls - changed all `write_register()` calls to `async_write_register()`
+- Fixed AttributeError when using coil switches - changed all `write_coil()` calls to `async_write_coil()`
+- Fixed deprecated `self.config_entry` assignment in OptionsFlow (removed for Home Assistant 2025.12+ compatibility)
+- Fixed excessive logging - changed verbose debug logs from INFO to DEBUG level
+- Fixed coil count from 56 to 56 (verified from documentation)
+
+### Added
+- Added comprehensive CLAUDE.md documentation for AI-assisted development
+- Added pymodbus version detection (v3.10+ uses `device_id` parameter, older uses `slave`)
+- Added detailed debug logging for register values (REG[1]-REG[5] and REG[20])
+- Added FFES_Modbus_0.1.pdf official documentation to repository
+
+### Changed
+- Updated all platform files to use async write methods (switch.py, number.py, select.py, climate.py)
+- Improved coordinator error messages with register address information
+- Updated documentation to reflect correct register addressing (REG[1] = physical address 1)
+
+### Technical Details
+- Register addressing now correct: FFES REG[1] = Modbus physical address 1 (not 0, not 2)
+- Reading 50 registers from physical address 1 (addresses 1-50 for REG[1] to REG[50])
+- Reading 56 coils from physical address 1 (addresses 1-56 for REG[1] to REG[56])
+- Controller status properly mapped: STATUS_OFF=0, STATUS_HEAT=1, STATUS_VENT=2, STATUS_STBY=3
+
 ## [1.0.1] - 2025-10-29
 
 ### Fixed
