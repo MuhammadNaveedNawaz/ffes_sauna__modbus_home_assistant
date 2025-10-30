@@ -1,7 +1,7 @@
 {
   "domain": "ffes_sauna",
   "name": "FFES Sauna Modbus",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "documentation": "https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant",
   "issue_tracker": "https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/issues",
   "codeowners": [
