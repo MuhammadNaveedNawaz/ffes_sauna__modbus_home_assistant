@@ -173,10 +173,9 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data = {}
 
         try:
-            # Read all 60 holding registers at once
-            # FFES controllers: start at physical address 2, read 60 registers
-            # Using logical addressing (0-based), REGISTER_OFFSET will be added automatically
-            _LOGGER.info("Reading FFES sauna registers (physical address %s, count %s)...",
+            # Read all holding registers at once
+            # FFES documentation: REG[1] to REG[50] maps to Modbus addresses 0-49
+            _LOGGER.info("Reading FFES sauna registers (starting at address %s, count %s)...",
                         REGISTER_OFFSET, REGISTER_COUNT)
 
             if USE_DEVICE_ID:
@@ -237,17 +236,17 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data["controller_model"] = registers[REG_CONTROLLER_MODEL]
 
             # Read coil registers (1-bit values)
-            # Coils likely use the same offset as holding registers
-            # FFES has 53 coils (0-52 logical = 2-54 physical)
+            # Coils use same addressing: REG[1] to REG[56] = Modbus addresses 0-55
+            # Reading 56 coils from address 0
             if USE_DEVICE_ID:
-                coil_result = self._client.read_coils(REGISTER_OFFSET, count=53, device_id=self.slave)
+                coil_result = self._client.read_coils(REGISTER_OFFSET, count=56, device_id=self.slave)
             else:
-                coil_result = self._client.read_coils(REGISTER_OFFSET, 53, slave=self.slave)
+                coil_result = self._client.read_coils(REGISTER_OFFSET, 56, slave=self.slave)
 
             if coil_result.isError():
                 _LOGGER.warning("Error reading coils (this may be expected): %s", coil_result)
                 # If coils fail, just skip them - not all data will be available
-                coils = [False] * 53
+                coils = [False] * 56
             else:
                 coils = coil_result.bits
                 _LOGGER.debug("Successfully read %s coils", len(coils))
