@@ -174,8 +174,9 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         try:
             # Read all holding registers at once
-            # FFES controllers: physical address 2 = REG[1], address 3 = REG[2], etc.
-            _LOGGER.info("Reading FFES sauna registers (physical address %s, count %s)...",
+            # FFES: physical address 1 = REG[1], physical address 2 = REG[2], etc.
+            # Reading 50 registers from physical address 1 (addresses 1-50)
+            _LOGGER.info("Reading FFES sauna registers (starting at physical address %s, count %s)...",
                         REGISTER_OFFSET, REGISTER_COUNT)
 
             if USE_DEVICE_ID:
@@ -244,8 +245,8 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data["controller_model"] = registers[REG_CONTROLLER_MODEL]
 
             # Read coil registers (1-bit values)
-            # Coils use same offset: physical address 2 = REG[1]
-            # Reading 56 coils from physical address 2
+            # Coils use same offset: physical address 1 = REG[1]
+            # Reading 56 coils from physical address 1 (addresses 1-56)
             if USE_DEVICE_ID:
                 coil_result = self._client.read_coils(REGISTER_OFFSET, count=56, device_id=self.slave)
             else:
