@@ -1,6 +1,6 @@
 # FFES Sauna Home Assistant Integration
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+[![hacs_badge](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://github.com/hacs/integration)
 [![GitHub release](https://img.shields.io/github/release/LeszekWroblowski/ffes_sauna__modbus_home_assistant.svg)](https://github.com/LeszekWroblowski/ffes_sauna__modbus_home_assistant/releases)
 
 Home Assistant integration for FFES Sauna controllers with Modbus TCP support.
