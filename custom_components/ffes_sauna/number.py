@@ -47,7 +47,7 @@ NUMBERS: tuple[FFESSaunaNumberDescription, ...] = (
         native_step=5,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda data: data.get("session_time"),
-        set_value_fn=lambda coord, value: coord.write_register(
+        set_value_fn=lambda coord, value: coord.async_write_register(
             REG_SESSION_TIME, int(value)
         ),
     ),
@@ -60,7 +60,7 @@ NUMBERS: tuple[FFESSaunaNumberDescription, ...] = (
         native_step=5,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda data: data.get("ventilation_time"),
-        set_value_fn=lambda coord, value: coord.write_register(
+        set_value_fn=lambda coord, value: coord.async_write_register(
             REG_VENTILATION_TIME, int(value)
         ),
     ),
@@ -73,7 +73,7 @@ NUMBERS: tuple[FFESSaunaNumberDescription, ...] = (
         native_step=5,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.get("aromatherapy"),
-        set_value_fn=lambda coord, value: coord.write_register(
+        set_value_fn=lambda coord, value: coord.async_write_register(
             REG_AROMA_SET_VALUE, int(value)
         ),
     ),
@@ -86,7 +86,7 @@ NUMBERS: tuple[FFESSaunaNumberDescription, ...] = (
         native_step=5,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.get("vaporizer_humidity_set"),
-        set_value_fn=lambda coord, value: coord.write_register(
+        set_value_fn=lambda coord, value: coord.async_write_register(
             REG_VAPORIZER_HUMIDITY, int(value)
         ),
     ),
@@ -99,7 +99,7 @@ NUMBERS: tuple[FFESSaunaNumberDescription, ...] = (
         native_step=5,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.get("cpir_g1_power"),
-        set_value_fn=lambda coord, value: coord.write_register(
+        set_value_fn=lambda coord, value: coord.async_write_register(
             REG_CPIR_G1_POWER, int(value)
         ),
     ),
@@ -112,7 +112,7 @@ NUMBERS: tuple[FFESSaunaNumberDescription, ...] = (
         native_step=5,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.get("cpir_g2_power"),
-        set_value_fn=lambda coord, value: coord.write_register(
+        set_value_fn=lambda coord, value: coord.async_write_register(
             REG_CPIR_G2_POWER, int(value)
         ),
     ),
@@ -125,7 +125,7 @@ NUMBERS: tuple[FFESSaunaNumberDescription, ...] = (
         native_step=5,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.get("cpir_g3_power"),
-        set_value_fn=lambda coord, value: coord.write_register(
+        set_value_fn=lambda coord, value: coord.async_write_register(
             REG_CPIR_G3_POWER, int(value)
         ),
     ),
@@ -138,7 +138,7 @@ NUMBERS: tuple[FFESSaunaNumberDescription, ...] = (
         native_step=5,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda data: data.get("cpir_g4_power"),
-        set_value_fn=lambda coord, value: coord.write_register(
+        set_value_fn=lambda coord, value: coord.async_write_register(
             REG_CPIR_G4_POWER, int(value)
         ),
     ),

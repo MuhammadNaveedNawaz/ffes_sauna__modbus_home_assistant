@@ -132,7 +132,7 @@ class FFESSaunaClimate(CoordinatorEntity[FFESSaunaCoordinator], ClimateEntity):
         temperature = max(self.min_temp, min(self.max_temp, temperature))
 
         try:
-            await self.coordinator.write_register(
+            await self.coordinator.async_write_register(
                 REG_TEMPERATURE_SET, int(temperature)
             )
             await self.coordinator.async_request_refresh()
@@ -144,9 +144,9 @@ class FFESSaunaClimate(CoordinatorEntity[FFESSaunaCoordinator], ClimateEntity):
         """Set new HVAC mode."""
         try:
             if hvac_mode == HVACMode.HEAT:
-                await self.coordinator.write_register(REG_CONTROLLER_STATUS, STATUS_HEAT)
+                await self.coordinator.async_write_register(REG_CONTROLLER_STATUS, STATUS_HEAT)
             elif hvac_mode == HVACMode.OFF:
-                await self.coordinator.write_register(REG_CONTROLLER_STATUS, STATUS_OFF)
+                await self.coordinator.async_write_register(REG_CONTROLLER_STATUS, STATUS_OFF)
             
             await self.coordinator.async_request_refresh()
         except Exception as err:

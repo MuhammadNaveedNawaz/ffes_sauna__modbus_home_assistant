@@ -76,7 +76,7 @@ class FFESSaunaProfileSelect(CoordinatorEntity[FFESSaunaCoordinator], SelectEnti
             return
         
         try:
-            await self.coordinator.write_register(REG_SAUNA_PROFILE, profile_num)
+            await self.coordinator.async_write_register(REG_SAUNA_PROFILE, profile_num)
             await self.coordinator.async_request_refresh()
         except Exception as err:
             _LOGGER.error("Error setting profile: %s", err)
