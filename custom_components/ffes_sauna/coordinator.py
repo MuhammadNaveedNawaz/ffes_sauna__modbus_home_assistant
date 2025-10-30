@@ -47,6 +47,8 @@ from .const import (
     REGISTER_COUNT,
     SAUNA_PROFILES,
     STATUS_NAMES,
+    STATUS_OFF,
+    STATUS_HEAT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -196,12 +198,13 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                          len(registers), registers[:10])
 
             # DEBUG: Log first few registers with their meanings
-            _LOGGER.info("Register values (first 5):")
+            _LOGGER.info("Register values (first 5 + status):")
             _LOGGER.info("  REG[1] TEMPERATURE_SET (registers[0]): %s", registers[0] if len(registers) > 0 else "N/A")
             _LOGGER.info("  REG[2] TEMP1_ACTUAL (registers[1]): %s", registers[1] if len(registers) > 1 else "N/A")
             _LOGGER.info("  REG[3] CLOCK (registers[2]): %s", registers[2] if len(registers) > 2 else "N/A")
             _LOGGER.info("  REG[4] SAUNA_PROFILE (registers[3]): %s", registers[3] if len(registers) > 3 else "N/A")
             _LOGGER.info("  REG[5] SESSION_TIME (registers[4]): %s", registers[4] if len(registers) > 4 else "N/A")
+            _LOGGER.info("  REG[20] CONTROLLER_STATUS (registers[19]): %s", registers[19] if len(registers) > 19 else "N/A")
 
             # Parse temperature values
             data["temperature_set"] = registers[REG_TEMPERATURE_SET]
@@ -239,7 +242,12 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             status_num = registers[REG_CONTROLLER_STATUS]
             data["controller_status"] = status_num
             data["controller_status_name"] = STATUS_NAMES.get(status_num, "Unknown")
-            
+
+            # Map controller status to is_on and is_heating for climate entity
+            # STATUS_OFF = 0, STATUS_HEAT = 1, STATUS_VENT = 2, STATUS_STBY = 3
+            data["is_on"] = status_num != STATUS_OFF  # On if not OFF
+            data["is_heating"] = status_num == STATUS_HEAT  # Heating only if STATUS_HEAT
+
             # Parse software version and model
             data["software_version"] = registers[REG_MODULE_SOFTWARE_VERSION]
             data["controller_model"] = registers[REG_CONTROLLER_MODEL]
