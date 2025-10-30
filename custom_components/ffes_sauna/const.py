@@ -10,6 +10,11 @@ DEFAULT_PORT: Final = 502
 DEFAULT_SLAVE: Final = 1
 DEFAULT_SCAN_INTERVAL: Final = 10
 
+# Modbus Register Offset
+# FFES controllers start at address 2 (verified with QModMaster)
+REGISTER_OFFSET: Final = 2
+REGISTER_COUNT: Final = 50  # Total number of registers available (0-49 logical = 2-51 physical)
+
 # Modbus Register Addresses (REG[x] in documentation = address x-1)
 # 1-bit registers (coils)
 REG_CONTROLLER_STATE: Final = 0  # REG[1]

@@ -43,6 +43,8 @@ from .const import (
     REG_VENTILATION_STATE,
     REG_VENTILATION_TIME,
     REG_WIFI_CONNECTION,
+    REGISTER_OFFSET,
+    REGISTER_COUNT,
     SAUNA_PROFILES,
     STATUS_NAMES,
 )
@@ -50,12 +52,22 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 # Detect pymodbus version to use correct parameter names
-PYMODBUS_MAJOR_VERSION = 3
+# v3.0-3.9: uses slave= parameter
+# v3.10+: uses device_id= parameter (slave= was removed)
+PYMODBUS_VERSION = "3.10.0"
+USE_DEVICE_ID = True
 try:
-    PYMODBUS_MAJOR_VERSION = int(pymodbus.__version__.split('.')[0])
-    _LOGGER.debug("Detected pymodbus version: %s", pymodbus.__version__)
+    PYMODBUS_VERSION = pymodbus.__version__
+    version_parts = PYMODBUS_VERSION.split('.')
+    major = int(version_parts[0])
+    minor = int(version_parts[1]) if len(version_parts) > 1 else 0
+
+    # Use device_id for v3.10+ and v4.0+
+    USE_DEVICE_ID = (major >= 4) or (major == 3 and minor >= 10)
+    _LOGGER.debug("Detected pymodbus version: %s, using %s parameter",
+                  PYMODBUS_VERSION, "device_id" if USE_DEVICE_ID else "slave")
 except (AttributeError, ValueError, IndexError):
-    _LOGGER.warning("Could not detect pymodbus version, assuming 3.x")
+    _LOGGER.warning("Could not detect pymodbus version, assuming 3.10+ (device_id parameter)")
 
 
 
@@ -112,22 +124,76 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.error("Unexpected error reading Modbus registers: %s", err)
             raise UpdateFailed(f"Error reading Modbus registers: {err}") from err
 
+    def _read_single_register_safe(self, address: int) -> int:
+        """Safely read a single register, return 0 if failed.
+
+        Args:
+            address: Logical address (0-based), will be adjusted by REGISTER_OFFSET
+        """
+        try:
+            physical_addr = REGISTER_OFFSET + address
+            if USE_DEVICE_ID:
+                result = self._client.read_holding_registers(physical_addr, count=1, device_id=self.slave)
+            else:
+                result = self._client.read_holding_registers(physical_addr, 1, slave=self.slave)
+
+            if result.isError():
+                _LOGGER.warning("Could not read register %s (physical %s): %s", address, physical_addr, result)
+                return 0
+            return result.registers[0]
+        except Exception as err:
+            _LOGGER.warning("Exception reading register %s: %s", address, err)
+            return 0
+
+    def _read_registers_safe(self, start: int, count: int) -> list[int]:
+        """Safely read multiple registers, return zeros if failed.
+
+        Args:
+            start: Logical start address (0-based), will be adjusted by REGISTER_OFFSET
+            count: Number of registers to read
+        """
+        try:
+            physical_addr = REGISTER_OFFSET + start
+            if USE_DEVICE_ID:
+                result = self._client.read_holding_registers(physical_addr, count=count, device_id=self.slave)
+            else:
+                result = self._client.read_holding_registers(physical_addr, count, slave=self.slave)
+
+            if result.isError():
+                _LOGGER.warning("Could not read registers %s-%s (physical %s-%s): %s",
+                              start, start+count-1, physical_addr, physical_addr+count-1, result)
+                return [0] * count
+            return result.registers
+        except Exception as err:
+            _LOGGER.warning("Exception reading registers %s-%s: %s", start, start+count-1, err)
+            return [0] * count
+
     def _read_registers(self) -> dict[str, Any]:
         """Read all necessary registers from the device."""
         data = {}
 
         try:
-            # Read 16-bit holding registers (addresses 0-49)
-            # pymodbus 3.x uses 'slave', 4.0+ uses 'device_id'
-            if PYMODBUS_MAJOR_VERSION >= 4:
-                result = self._client.read_holding_registers(0, count=50, device_id=self.slave)
+            # Read all 60 holding registers at once
+            # FFES controllers: start at physical address 2, read 60 registers
+            # Using logical addressing (0-based), REGISTER_OFFSET will be added automatically
+            _LOGGER.info("Reading FFES sauna registers (physical address %s, count %s)...",
+                        REGISTER_OFFSET, REGISTER_COUNT)
+
+            if USE_DEVICE_ID:
+                result = self._client.read_holding_registers(
+                    REGISTER_OFFSET, count=REGISTER_COUNT, device_id=self.slave
+                )
             else:
-                result = self._client.read_holding_registers(0, 50, slave=self.slave)
-            
+                result = self._client.read_holding_registers(
+                    REGISTER_OFFSET, REGISTER_COUNT, slave=self.slave
+                )
+
             if result.isError():
                 raise ModbusException(f"Error reading holding registers: {result}")
 
             registers = result.registers
+            _LOGGER.debug("Successfully read %s registers, first 10: %s",
+                         len(registers), registers[:10])
 
             # Parse temperature values
             data["temperature_set"] = registers[REG_TEMPERATURE_SET]
@@ -171,17 +237,22 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data["controller_model"] = registers[REG_CONTROLLER_MODEL]
 
             # Read coil registers (1-bit values)
-            if PYMODBUS_MAJOR_VERSION >= 4:
-                coil_result = self._client.read_coils(0, count=56, device_id=self.slave)
+            # Coils likely use the same offset as holding registers
+            # FFES has 53 coils (0-52 logical = 2-54 physical)
+            if USE_DEVICE_ID:
+                coil_result = self._client.read_coils(REGISTER_OFFSET, count=53, device_id=self.slave)
             else:
-                coil_result = self._client.read_coils(0, 56, slave=self.slave)
-            
-            if coil_result.isError():
-                raise ModbusException(f"Error reading coils: {coil_result}")
+                coil_result = self._client.read_coils(REGISTER_OFFSET, 53, slave=self.slave)
 
-            coils = coil_result.bits
-            
-            # Parse coil states
+            if coil_result.isError():
+                _LOGGER.warning("Error reading coils (this may be expected): %s", coil_result)
+                # If coils fail, just skip them - not all data will be available
+                coils = [False] * 53
+            else:
+                coils = coil_result.bits
+                _LOGGER.debug("Successfully read %s coils", len(coils))
+
+            # Parse coil states (may be all False if read failed)
             data["wifi_connection"] = coils[REG_WIFI_CONNECTION]
             data["server_connection"] = coils[REG_SERVER_CONNECTION]
             data["frost_protection"] = coils[REG_FROST_PROTECTION]
@@ -199,28 +270,41 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ModbusException(f"Error parsing Modbus data: {err}") from err
 
     def _write_register_sync(self, address: int, value: int) -> None:
-        """Synchronously write a register."""
-        if PYMODBUS_MAJOR_VERSION >= 4:
-            result = self._client.write_register(address, value, device_id=self.slave)
+        """Synchronously write a register.
+
+        Args:
+            address: Logical address (0-based), will be adjusted by REGISTER_OFFSET
+            value: Value to write
+        """
+        physical_addr = REGISTER_OFFSET + address
+        if USE_DEVICE_ID:
+            result = self._client.write_register(physical_addr, value, device_id=self.slave)
         else:
-            result = self._client.write_register(address, value, slave=self.slave)
-        
+            result = self._client.write_register(physical_addr, value, slave=self.slave)
+
         if result.isError():
-            raise ModbusException(f"Error writing register {address}: {result}")
-        
-        _LOGGER.debug("Wrote value %s to register %s", value, address)
+            raise ModbusException(f"Error writing register {address} (physical {physical_addr}): {result}")
+
+        _LOGGER.debug("Wrote value %s to register %s (physical %s)", value, address, physical_addr)
 
     def _write_coil_sync(self, address: int, value: bool) -> None:
-        """Synchronously write a coil."""
-        if PYMODBUS_MAJOR_VERSION >= 4:
-            result = self._client.write_coil(address, value, device_id=self.slave)
+        """Synchronously write a coil.
+
+        Args:
+            address: Logical address (0-based), will be adjusted by REGISTER_OFFSET
+            value: Boolean value to write
+        """
+        # Coils may also use the same offset - needs verification
+        physical_addr = REGISTER_OFFSET + address
+        if USE_DEVICE_ID:
+            result = self._client.write_coil(physical_addr, value, device_id=self.slave)
         else:
-            result = self._client.write_coil(address, value, slave=self.slave)
-        
+            result = self._client.write_coil(physical_addr, value, slave=self.slave)
+
         if result.isError():
-            raise ModbusException(f"Error writing coil {address}: {result}")
-        
-        _LOGGER.debug("Wrote value %s to coil %s", value, address)
+            raise ModbusException(f"Error writing coil {address} (physical {physical_addr}): {result}")
+
+        _LOGGER.debug("Wrote value %s to coil %s (physical %s)", value, address, physical_addr)
 
     async def async_write_register(self, address: int, value: int) -> None:
         """Write a single register."""
