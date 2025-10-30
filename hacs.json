@@ -3,7 +3,6 @@
   "content_in_root": false,
   "filename": "ffes_sauna",
   "render_readme": true,
-  "domains": ["climate", "sensor", "switch", "number", "select", "binary_sensor"],
   "homeassistant": "2024.1.0",
   "iot_class": "Local Polling"
 }
