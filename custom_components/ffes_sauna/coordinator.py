@@ -178,7 +178,7 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Read all holding registers at once
             # FFES: physical address 1 = REG[1], physical address 2 = REG[2], etc.
             # Reading 50 registers from physical address 1 (addresses 1-50)
-            _LOGGER.info("Reading FFES sauna registers (starting at physical address %s, count %s)...",
+            _LOGGER.debug("Reading FFES sauna registers (starting at physical address %s, count %s)...",
                         REGISTER_OFFSET, REGISTER_COUNT)
 
             if USE_DEVICE_ID:
@@ -197,14 +197,14 @@ class FFESSaunaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug("Successfully read %s registers, first 10: %s",
                          len(registers), registers[:10])
 
-            # DEBUG: Log first few registers with their meanings
-            _LOGGER.info("Register values (first 5 + status):")
-            _LOGGER.info("  REG[1] TEMPERATURE_SET (registers[0]): %s", registers[0] if len(registers) > 0 else "N/A")
-            _LOGGER.info("  REG[2] TEMP1_ACTUAL (registers[1]): %s", registers[1] if len(registers) > 1 else "N/A")
-            _LOGGER.info("  REG[3] CLOCK (registers[2]): %s", registers[2] if len(registers) > 2 else "N/A")
-            _LOGGER.info("  REG[4] SAUNA_PROFILE (registers[3]): %s", registers[3] if len(registers) > 3 else "N/A")
-            _LOGGER.info("  REG[5] SESSION_TIME (registers[4]): %s", registers[4] if len(registers) > 4 else "N/A")
-            _LOGGER.info("  REG[20] CONTROLLER_STATUS (registers[19]): %s", registers[19] if len(registers) > 19 else "N/A")
+            # DEBUG: Log first few registers with their meanings (only visible when debug logging enabled)
+            _LOGGER.debug("Register values (first 5 + status):")
+            _LOGGER.debug("  REG[1] TEMPERATURE_SET (registers[0]): %s", registers[0] if len(registers) > 0 else "N/A")
+            _LOGGER.debug("  REG[2] TEMP1_ACTUAL (registers[1]): %s", registers[1] if len(registers) > 1 else "N/A")
+            _LOGGER.debug("  REG[3] CLOCK (registers[2]): %s", registers[2] if len(registers) > 2 else "N/A")
+            _LOGGER.debug("  REG[4] SAUNA_PROFILE (registers[3]): %s", registers[3] if len(registers) > 3 else "N/A")
+            _LOGGER.debug("  REG[5] SESSION_TIME (registers[4]): %s", registers[4] if len(registers) > 4 else "N/A")
+            _LOGGER.debug("  REG[20] CONTROLLER_STATUS (registers[19]): %s", registers[19] if len(registers) > 19 else "N/A")
 
             # Parse temperature values
             data["temperature_set"] = registers[REG_TEMPERATURE_SET]
