@@ -348,6 +348,29 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 See [CHANGELOG.md](CHANGELOG.md) for a list of changes.
 
+## Development Status
+
+### Home Assistant Brands Submission
+- **Status**: Pending review
+- **PR**: https://github.com/home-assistant/brands/pull/8326
+- **Branch**: `patch-4` in fork https://github.com/LeszekWroblowski/brands
+- **Updated**: 2025-11-02
+- **Files submitted**:
+  - icon.png (256×256, RGBA transparent)
+  - icon@2x.png (512×512, RGBA transparent)
+  - logo.png (256×128, RGBA transparent)
+  - logo@2x.png (512×256, RGBA transparent)
+- **Next step**: Wait for reviewer feedback. When response arrives, optionally add comment to PR:
+  ```
+  I've updated all brand assets with transparent backgrounds and correct dimensions:
+  - icon.png (256×256)
+  - icon@2x.png (512×512)
+  - logo.png (256×128)
+  - logo@2x.png (512×256)
+
+  All files now have RGBA transparency as requested.
+  ```
+
 ---
 
 Made with ❤️ for the Home Assistant community
